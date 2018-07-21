@@ -1,0 +1,54 @@
+SPARK POC FOR DAILY SHOW ANALYIS
+===================================
+
+Dataset Description:
+---------------------
+YEAR –  The year the episode aired
+
+GoogleKnowlege_Occupation -Their occupation or office, according to Google’s Knowledge Graph or, if they’re not in there, how Stewart introduced them on the program.
+
+Show – Air date of episode. Not unique, as some shows had more than one guest
+
+Group – A larger group designation for the occupation. For instance, us senators, us presidents, and former presidents are all under “politicians”
+
+Raw_Guest_List – The person or list of people who appeared on the show, according to Wikipedia. The GoogleKnowlege_Occupation only refers to one of them in a given row.    
+
+Input DataSet :
+---------------
+https://drive.google.com/file/d/0ByJLBTmJojjzaXlsVWl0WEhPZDQ/view
+
+Problem Statement:
+-------------------
+Find the top 5 kinds of GoogleKnowlege_Occupation people gusted the show in a particular time period.
+
+Source Code:
+------------
+hadoop fs -mkdir -p /user/hadoop/input/
+hadoop fs -put /home/cloudera/Downloads/dialy_show_guests /user/hadoop/input/
+spark-shell
+val rdd1 = sc.textFile("hdfs://quickstart.cloudera:8020/user/hadoop/input/dialy_show_guests")
+rdd1.count
+val rdd2 = rdd1.map(_.split(","))
+val dateformat = new java.text.SimpleDateFormat("MM/dd/yy")
+val rdd3 = rdd2.map(x => (x(1), dateformat.parse(x(2))))
+val rdd4 = rdd3.filter(x => {if(x._2.after(dateformat.parse("1/11/99")) && x._2.before(dateformat.parse("31/11/99"))) true else false})
+val rdd5 = rdd4.map(x=> (x._1,1))
+val rdd6 = rdd5.reduceByKey(_+_)
+val rdd7 = rdd6.map(key => key.swap)
+val rdd8 = rdd7.sortByKey(false)
+val rdd9 = rdd8.take(5)
+rdd9.foreach(println)
+
+
+Output:
+-------
+
+(146,actor)
+(83,actress)
+(21,comedian)
+(8,television actress)
+(8,NA)
+
+
+
+
